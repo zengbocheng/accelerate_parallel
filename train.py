@@ -84,12 +84,12 @@ if __name__ == '__main__':
     )
 
     # plot train loss
-    fig = plt.figure()
-    train_idx = np.arange(1, config['epochs']+1)
-    # plt.plot(train_idx[int(len(train_idx)*0.2):-1], train_loss[int(len(train_idx)*0.2):-1], label='Train')  # 只绘制后0.8
-    plt.semilogy(train_idx, train_loss)
-    plt.title('Train Loss')
-    fig.savefig(config['figs_loss_train'])
+    if accelerator.is_main_process:
+        fig = plt.figure()
+        train_idx = np.arange(1, config['epochs']+1)
+        plt.semilogy(train_idx, train_loss)
+        plt.title('Train Loss')
+        fig.savefig(config['figs_loss_train'])
 
     # Test in single GPU
     datasetTest = ToyDataset(length=1000)
@@ -109,5 +109,4 @@ if __name__ == '__main__':
 
     if accelerator.is_main_process:
         logger.info('Test loss: {:.4e}'.format(sum(test_losses) / len(test_losses)))
-
-    logger.info('Done!')
+        logger.info('Done!')
