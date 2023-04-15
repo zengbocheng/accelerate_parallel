@@ -1,0 +1,22 @@
+# random seed
+random_seed: 66
+
+# data precision
+precision: float32
+
+# super parameters
+epochs: 1000
+learning_rate: 1.0e-3
+steplr_size: 100
+steplr_gamma: 0.96
+shuffle: false
+batch_size: 8
+
+# experiment name and path
+experiment_name: '1'
+continuous_train: false
+checkpoint_path: '/home/bochengzeng/PythonProjects/accelerate_parallel/checkpoints/checkpoint{}.pt'
+figs_loss_train: '/home/bochengzeng/PythonProjects/accelerate_parallel/figs/train_{}.pdf'
+
+# log
+log_file: 'logs/out{}.log'
