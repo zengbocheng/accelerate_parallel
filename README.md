@@ -1,6 +1,6 @@
 # Introduction
 
-This a demo of [Hugging Face Accelerate](https://huggingface.co/docs/accelerate/v0.18.0/en/index) for pytorch parallel running in **multiple machines** with multiple GPUs. See [project](https://github.com/zengbocheng/accelerate_parallel) for the demo running in **single machine** with multiple GPUs. The only difference between two demos is yamls/accelerate.yaml.
+This a demo of [Hugging Face Accelerate](https://huggingface.co/docs/accelerate/v0.18.0/en/index) for pytorch parallel running in **single machine** with multiple GPUs. See [project](https://github.com/zengbocheng/accelerate_parallel) for the demo running in **multiple machines** with multiple GPUs. The only difference between two demos is yamls/accelerate.yaml.
 
 # Usage
 
