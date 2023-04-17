@@ -1,6 +1,6 @@
 # Introduction
 
-This a demo of [Hugging Face Accelerate](https://huggingface.co/docs/accelerate/v0.18.0/en/index) for pytorch parallel running in **single machine** with multiple GPUs. See [project](https://github.com/zengbocheng/accelerate_parallel/tree/multi_nodes) for the demo running in **multiple machines** with multiple GPUs. The only difference between two demos is yamls/accelerate.yaml.
+This a demo of [Hugging Face Accelerate](https://huggingface.co/docs/accelerate/v0.18.0/en/index) for pytorch parallel running in **multiple machines** with multiple GPUs. See [project](https://github.com/zengbocheng/accelerate_parallel/tree/multi_nodes) for the demo running in **single machine** with multiple GPUs. The only difference between two demos is yamls/accelerate.yaml.
 
 # Usage
 
@@ -22,7 +22,7 @@ Note: if you run multiple Accelerate projects in the same machine, you may get t
 mkdir checkpoints figs logs
 ```
 
-5.run the shell script to train and watch log file.
+5.run the shell script to train in each machine, and watch log file in the main machine.
 ```shell script
 nohup sh run.sh &
 tail -f logs/out1.log
