@@ -13,8 +13,9 @@ pip install -r requirements
 
 3.generate the config file of Accelerate
 ```shell script
-accelerate config --config_file yamls/accelerate.yaml
+sh config.sh
 ```
+Note: if you run multiple Accelerate projects in the same machine, you may get the error that the address have been used already. You can try add 'main_process_port: 12388' in the accelerate.yaml to configure a different port.
 
 4.create directories
 ```shell script

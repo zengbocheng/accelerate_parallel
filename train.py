@@ -5,7 +5,6 @@
 """
 import config as cfg
 from accelerate import Accelerator
-from accelerate.logging import get_logger
 from kogger import Logger
 import pprint
 from model import ToyModel
@@ -21,10 +20,12 @@ def train(model, accelerator, data_loader, epochs, loss_func, optimizer, schedul
     train_losses = []
 
     for ii in range(1, epochs+1):
+        total_loss = 0
         for batch_idx, (data, label) in enumerate(data_loader):
             # data: [b, n]
             output = model(data)
             loss = loss_func(output, label)
+            total_loss = total_loss + loss.item()
 
             # Backward and optimize
             optimizer.zero_grad()
@@ -32,12 +33,13 @@ def train(model, accelerator, data_loader, epochs, loss_func, optimizer, schedul
             optimizer.step()
         scheduler.step()
 
-        train_losses.append(loss.item())
+        mean_loss = total_loss / len(data_loader)
+        train_losses.append(mean_loss)
 
         if ii == 1 or ii % 10 == 0:
             accelerator.save_state(output_dir=checkpoint_path)
             if accelerator.is_main_process:
-                logger.info('[Train {}/{}] MSE loss: {:.4e}'.format(ii, epochs, loss))
+                logger.info('[Train {}/{}] MSE loss: {:.4e}'.format(ii, epochs, mean_loss))
 
     return train_losses
 
@@ -83,30 +85,31 @@ if __name__ == '__main__':
         logger=logger
     )
 
-    # plot train loss
     if accelerator.is_main_process:
+        # plot train loss
         fig = plt.figure()
         train_idx = np.arange(1, config['epochs']+1)
         plt.semilogy(train_idx, train_loss)
         plt.title('Train Loss')
         fig.savefig(config['figs_loss_train'])
 
-    # Test in single GPU
-    datasetTest = ToyDataset(length=1000)
-    test_loader = DataLoader(
-        dataset=datasetTest,
-        shuffle=config['shuffle'],
-        batch_size=config['batch_size']
-    )
-    accelerator.load_state(input_dir=config['checkpoint_path'])
-    test_losses = []
-    for inputs, targets in test_loader:
-        inputs = inputs.cuda()
-        targets = targets.cuda()
-        predictions = model(inputs)
-        test_loss = mse_func(predictions, targets)
-        test_losses.append(test_loss.item())
+        # Test in single GPU
+        datasetTest = ToyDataset(length=1000)
+        test_loader = DataLoader(
+            dataset=datasetTest,
+            shuffle=config['shuffle'],
+            batch_size=config['batch_size']
+        )
+        accelerator.load_state(input_dir=config['checkpoint_path'])
+        test_losses = []
 
-    if accelerator.is_main_process:
+        with torch.no_grad():
+            for inputs, targets in test_loader:
+                inputs = inputs.cuda()
+                targets = targets.cuda()
+                predictions = model(inputs)
+                test_loss = mse_func(predictions, targets)
+                test_losses.append(test_loss.item())
+
         logger.info('Test loss: {:.4e}'.format(sum(test_losses) / len(test_losses)))
         logger.info('Done!')
