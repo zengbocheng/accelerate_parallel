@@ -24,6 +24,6 @@ mkdir checkpoints figs logs
 
 5.run the shell script to train in each machine, and watch log file in the main machine.
 ```shell script
-nohup sh run.sh &
+nohup sh run.sh & disown
 tail -f logs/out1.log
 ```
