@@ -6,7 +6,7 @@ This a demo of [Hugging Face Accelerate](https://huggingface.co/docs/accelerate/
 
 1.install requirements
 ```shell script
-pip install -r requirements
+pip install -r requirements.txt
 ```
 
 2.edit the config file of yamls/train.yaml
@@ -24,6 +24,6 @@ mkdir checkpoints figs logs
 
 5.run the shell script to train and watch log file.
 ```shell script
-nohup sh run.sh & disown
+nohup sh train.sh & disown
 tail -f logs/out1.log
 ```
