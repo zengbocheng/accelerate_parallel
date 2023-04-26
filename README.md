@@ -6,7 +6,7 @@ This a demo of [Hugging Face Accelerate](https://huggingface.co/docs/accelerate/
 
 1.install requirements
 ```shell script
-pip install -r requirements
+pip install -r requirements.txt
 ```
 
 2.edit the config file of yamls/train.yaml
