@@ -3,7 +3,7 @@
 @date: 2023/04/15
 @email: bochengzeng@bochengz.top
 """
-import config as cfg
+from config import Config
 from accelerate import Accelerator
 from kogger import Logger
 import pprint
@@ -14,12 +14,13 @@ import torch.optim as optim
 import torch
 import matplotlib.pyplot as plt
 import numpy as np
+from torch.utils.tensorboard import SummaryWriter
+import time
 
 
-def train(model, accelerator, data_loader, epochs, loss_func, optimizer, scheduler, checkpoint_path, logger):
-    train_losses = []
+def train(model, writer, accelerator, data_loader, epochs, loss_func, optimizer, scheduler, checkpoint_path, logger):
 
-    for ii in range(1, epochs+1):
+    for epoch in range(1, epochs + 1):
         total_loss = 0
         for batch_idx, (data, label) in enumerate(data_loader):
             # data: [b, n]
@@ -34,28 +35,27 @@ def train(model, accelerator, data_loader, epochs, loss_func, optimizer, schedul
         scheduler.step()
 
         mean_loss = total_loss / len(data_loader)
-        train_losses.append(mean_loss)
+        if accelerator.is_main_process:
+            writer.add_scalar('Loss/train', mean_loss, epoch)
 
-        if ii == 1 or ii % 10 == 0:
+        if epoch == 1 or epoch % 10 == 0:
             accelerator.save_state(output_dir=checkpoint_path)
             if accelerator.is_main_process:
-                logger.info('[Train {}/{}] MSE loss: {:.4e}'.format(ii, epochs, mean_loss))
-
-    return train_losses
+                logger.info('[Train {}/{}] MSE loss: {:.4e}'.format(epoch, epochs, mean_loss))
 
 
-if __name__ == '__main__':
+def main():
     # load and set config
-    args = cfg.get_parser().parse_args()
-    config = cfg.load_config(yaml_filename=args.filename)
-    config = cfg.process_config(config)
+    args = Config.get_parser().parse_args()
+    config = Config(yaml_filename=args.filename)
 
     accelerator = Accelerator()
 
-    logger = Logger('PID %d' % accelerator.process_index, file=config['log_file'])
+    # logger = Logger('PID %d' % accelerator.process_index, file=config['log_file'])
+    logger = Logger('PID %d' % accelerator.process_index)
     if accelerator.is_main_process:
         logger.info('Load config successfully!')
-        logger.info(pprint.pformat(config))
+        logger.info(pprint.pformat(config.data))
 
     dataset = ToyDataset(length=1000)
 
@@ -70,11 +70,14 @@ if __name__ == '__main__':
     mse_func = torch.nn.MSELoss()
     scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=config['steplr_size'], gamma=config['steplr_gamma'])
     model, optimizer, data_loader, scheduler = accelerator.prepare(
-       model, optimizer, data_loader, scheduler
+        model, optimizer, data_loader, scheduler
     )
 
-    train_loss = train(
+    writer = SummaryWriter(comment=config['experiment_name'])
+
+    train(
         model=model,
+        writer=writer,
         accelerator=accelerator,
         data_loader=data_loader,
         epochs=config['epochs'],
@@ -84,15 +87,10 @@ if __name__ == '__main__':
         checkpoint_path=config['checkpoint_path'],
         logger=logger
     )
+    writer.flush()
+    writer.close()
 
     if accelerator.is_main_process:
-        # plot train loss
-        fig = plt.figure()
-        train_idx = np.arange(1, config['epochs']+1)
-        plt.semilogy(train_idx, train_loss)
-        plt.title('Train Loss')
-        fig.savefig(config['figs_loss_train'])
-
         # Test in single GPU
         datasetTest = ToyDataset(length=1000)
         test_loader = DataLoader(
@@ -112,4 +110,8 @@ if __name__ == '__main__':
                 test_losses.append(test_loss.item())
 
         logger.info('Test loss: {:.4e}'.format(sum(test_losses) / len(test_losses)))
-        logger.info('Done!')
+        logger.info('Done')
+
+
+if __name__ == '__main__':
+    main()

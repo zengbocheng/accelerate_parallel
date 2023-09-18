@@ -6,3 +6,5 @@ checkpoints/
 figs/
 
 logs/
+
+runs/
